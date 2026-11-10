@@ -157,7 +157,7 @@ def fig2():
         linespacing=1.0,
         path_effects=[pe.withStroke(linewidth=1.6, foreground='white')],
     )
-    cb = fig.colorbar(m, ax=ax, orientation='horizontal', fraction=0.05, pad=0.11, aspect=30)
+    cb = fig.colorbar(m, ax=ax, orientation='horizontal', fraction=0.05, pad=0.11, aspect=30, extend='max')
     cb.set_label('1991–2020 SST anomaly (K)', fontsize=6.5)
     cb.ax.tick_params(labelsize=6)
     latlon(ax, range(0, 16, 5), range(36, 46, 3))
@@ -341,7 +341,7 @@ def fig3():
         a.set_xlabel(xl, fontsize=6.5)
         a.tick_params(labelsize=6)
         letter(a, L, x=0.95)
-        a.set_ylabel('Area (%)' if L == 'd' else 'Hourly grid-cell values (%)', fontsize=6.5)
+        a.set_ylabel('Grid cells (%)' if L == 'd' else 'Hourly grid-cell values (%)', fontsize=6.5)
     ad.set_ylim(0.001, 100)
     ae.set_ylim(0.0001, 10)
     ad.set_yticks([0.001, 0.01, 0.1, 1, 10, 100], ['0.001', '0.01', '0.1', '1', '10', '100'])
@@ -600,19 +600,17 @@ def figS3():
     """(a) Tracks of the surface cyclones associated with the MCV, over the sea; (b, c) cyclone phase space;
     (d) mean vorticity profile within 50 km of the MCV center, 2200-0800 UTC."""
     H = pd.read_csv(DATASET / 'diagnostics/associated_cyclone_hourly.csv', parse_dates=['time'])
-    RUNS = [
-        ('curr_ctrl', SSTC['curr'], 'o'),
-        ('curr_skb1', SSTC['curr'], 's'),
-        ('plus2k_ctrl', SSTC['plus2k'], 'o'),
-        ('plus2k_skb1', SSTC['plus2k'], 's'),
-        ('plus2k_skb2', SSTC['plus2k'], '^'),
-        ('plus2kall_ctrl', SSTC['plus2kall'], 'o'),
-        ('plus2kall_skb1', SSTC['plus2kall'], 's'),
+    MARK = {'ctrl': 'o', 'skb1': 's', 'skb2': '^'}
+    RUNS = [  # every Morrison-YSU run with an associated cyclone
+        (f'{sst}_{mem}', SSTC[sst], MARK[mem])
+        for sst in ('clim', 'curr', 'plus2k', 'plus2kall')
+        for mem in MARK
+        if f'{sst}_{mem}' in set(H.run)
     ]
     fig = plt.figure(figsize=(W, 5.6))
     g = fig.add_gridspec(2, 2, wspace=0.28, hspace=0.3, left=0.07, right=0.99, top=0.97, bottom=0.13)
     ax = fig.add_subplot(g[0, 0], projection=REGIONAL)
-    ax.set_extent([1.2, 5.6, 40.2, 42.6], crs=PC)
+    ax.set_extent([1.2, 5.6, 39.6, 42.7], crs=PC)
     coast(ax, '10m')
     pa, pb, pc = fig.add_subplot(g[0, 1]), fig.add_subplot(g[1, 0]), fig.add_subplot(g[1, 1])
     for run, col, mk in RUNS:
@@ -633,7 +631,7 @@ def figS3():
                     a.plot(sm[xk], sm[yk], color=col, lw=1.1, ls='-', zorder=3)
                     a.plot(sm[xk].iloc[-1], sm[yk].iloc[-1], marker=mk, ms=4, color=col, zorder=4)
                     a.plot(sm[xk].iloc[0], sm[yk].iloc[0], marker=mk, ms=4, mfc='white', mec=col, mew=0.8, zorder=4)
-    latlon(ax, range(2, 6), range(41, 43))
+    latlon(ax, range(2, 6), range(40, 43))
     letter(ax, 'a')
     pa.axvline(0, color='.5', lw=0.5)
     pa.axhline(10, color='.5', lw=0.5, ls='--')

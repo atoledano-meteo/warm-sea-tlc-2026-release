@@ -19,6 +19,7 @@ from metpy.units import units
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from warmsea.runs import SST_RUNS
+from warmsea.wrf import temperature
 
 RUNS = [r for r in SST_RUNS if not r.startswith('tmynn')]
 HOURS = pd.date_range('2026-10-03 12:00', '2026-10-04 06:00', freq='h')
@@ -48,7 +49,7 @@ def run_series(run_dir):
                 if k == 0:
                     g = lambda v, s=sea: np.asarray(d[v][0], 'f8')[:, s]
                     p = g('P') + g('PB')
-                    tk = (g('T') + 300) * (p / 1e5) ** 0.2857
+                    tk = temperature(p, g('T') + 300)
                     ph = (np.asarray(d['PH'][0], 'f8')[:, sea] + np.asarray(d['PHB'][0], 'f8')[:, sea]) / 9.81 - hgt
                     z = 0.5 * (ph[1:] + ph[:-1])
                     row['theta_e_0_1km_K'] = float(theta_e(p, tk, g('QVAPOR'))[z < 1000].mean())

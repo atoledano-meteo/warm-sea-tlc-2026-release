@@ -20,7 +20,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from warmsea.runs import SST_RUNS, MAP_TIMES, SECTIONS
-from warmsea.wrf import mslp
+from warmsea.wrf import mslp, temperature, virtual_temperature
 
 ZLIB = {'zlib': True, 'complevel': 4}
 SOURCE = (
@@ -138,7 +138,7 @@ def section(run_dir, t, yc, xc, motion, half=150.0, ns=121, zk=np.arange(100, 14
         lat, lon, hgt = g('XLAT'), g('XLONG'), g('HGT')
         sea = g('XLAND') > 1.5
         p = g('P') + g('PB')
-        tk = (g('T') + 300) * (p / 1e5) ** 0.2857
+        tk = temperature(p, g('T') + 300)
         qv = g('QVAPOR')
         z = 0.5 * ((g('PH') + g('PHB'))[1:] + (g('PH') + g('PHB'))[:-1]) / 9.81
         u = 0.5 * (g('U')[:, :, 1:] + g('U')[:, :, :-1])
@@ -146,7 +146,7 @@ def section(run_dir, t, yc, xc, motion, half=150.0, ns=121, zk=np.arange(100, 14
         v = v * g('COSALPHA') + u * g('SINALPHA')
         cond = sum(g(n) for n in ('QCLOUD', 'QICE', 'QSNOW', 'QGRAUP')) * 1e3
         slp = mslp(g('PSFC'), g('T2'), hgt)
-        tv = tk * (1 + 0.61 * qv)
+        tv = virtual_temperature(tk, qv)
         rr = (g('RAINNC') + g('RAINC')) - (g('RAINNC', d0) + g('RAINC', d0))
     kx = 111.2 * np.cos(np.radians(yc))
     xs = np.linspace(-half, half, ns)

@@ -27,6 +27,7 @@ from netCDF4 import Dataset
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from warmsea.runs import MAP_TIMES
+from warmsea.wrf import specific_humidity, temperature
 
 CHANNELS = {10: 'wv63', 14: 'ir105'}
 R_E, R_SAT = 6371.0, 42164.0
@@ -73,8 +74,8 @@ def columns(path, box):
             lat=lat[m],
             lon=lon[m],
             p=p / 100,
-            t=th * (p / 1e5) ** 0.2857,
-            q=qv / (1 + qv),
+            t=temperature(p, th),
+            q=specific_humidity(qv),
             liq=np.maximum(g('QCLOUD'), 0),
             ice=np.maximum(g('QICE') + g('QSNOW') + g('QGRAUP'), 0),
             psfc=g('PSFC') / 100,

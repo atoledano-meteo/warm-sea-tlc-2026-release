@@ -20,6 +20,7 @@ from netCDF4 import Dataset
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from warmsea.runs import SST_RUNS
 from warmsea import vortex as V
+from warmsea.wrf import virtual_temperature
 
 TIMES = pd.date_range('2026-10-03 18:00', '2026-10-05 00:00', freq='h')
 P_LEVELS = np.array([925, 900, 850, 800, 750, 700, 650, 600, 575, 550, 525, 500, 450, 400, 350, 300, 250, 200.0])
@@ -44,7 +45,7 @@ def extract(job):
         z = wrf.destagger((g('PH') + g('PHB')) / 9.81, 0, meta=False)
         tk = wrf.tk(p, g('T') + 300, meta=False)
         q = np.maximum(g('QVAPOR'), 0)
-        tv = tk * (1 + q / 0.6219569100577033) / (1 + q)
+        tv = virtual_temperature(tk, q)
         u = wrf.destagger(g('U'), -1, meta=False)
         v = wrf.destagger(g('V'), -2, meta=False)
         ip = lambda a: arr(wrf.interplevel(a, np.log(p / 100), np.log(P_LEVELS), meta=False, missing=np.nan))
