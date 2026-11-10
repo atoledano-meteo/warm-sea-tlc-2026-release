@@ -1,0 +1,4 @@
+dataset: ../dataset             # Zenodo dataset, unpacked
+era5: data/era5                 # written by scripts/download_era5.py
+observations: data/observations # third-party observations (see README)
+output: output
