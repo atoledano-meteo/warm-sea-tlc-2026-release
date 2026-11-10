@@ -11,12 +11,13 @@ Code and model configuration for the paper by Toledano, Udina, Sola, Bech, Busqu
 | `namelists/wrf/<run>/` | WRF-ARW 4.6.1 namelist of each run; `iofields_d0*.txt` are shared by all runs |
 | `scripts/make_figures.py` | Figures 2, 3, 4, S3 and S4, from the dataset and ERA5 |
 | `scripts/make_observation_figures.py` | Figures 1, S1 and S2, from the observations |
-| `scripts/make_tables.py` | Tables S1 to S3 |
+| `scripts/make_tables.py` | Tables S1 to S3, and the Text S3 numbers |
 | `scripts/download_era5.py` | ERA5 fields of Figures 1d and 2c,d |
 | `scripts/make_sst.py` | CLIM and +2K SST from the current SST |
 | `scripts/warm_met_em.py` | +2K-ALL initial and boundary conditions |
 | `scripts/simulate_satellite.py` | Simulated 10.5 µm brightness temperature (RTTOV) |
 | `scripts/diagnose_vortices.py` | MCV and surface-cyclone diagnostics |
+| `scripts/maritime_flow.py` | Latent heat flux and θe of the low-level maritime flow (Text S3) |
 | `scripts/export_dataset.py` | How the dataset was extracted from the full WRF output |
 | `warmsea/` | Run names, readers and the vortex diagnostics |
 
@@ -35,8 +36,8 @@ Thompson–MYNN runs.
 In Table S1, ERA5T Morrison–YSU is `curr_ctrl` and ERA5T Thompson–MYNN is `tmynn_curr_ctrl`.
 
 All runs start at 1200 UTC 2 October 2026. The SST experiments differ only in the SST that WRF reads from `wrflowinp`
-(dataset `sst/`); the SKEBS members differ from CTRL only in the `&stoch` section. +2K-ALL also uses the met_em files
-of `warm_met_em.py`.
+(dataset `sst/`); the SKEBS members differ from CTRL only in the `&stoch` section. +2K-ALL uses the +2K SST and the
+met_em files of `warm_met_em.py`.
 
 ## Reproducing the figures and tables
 
@@ -50,7 +51,8 @@ python scripts/make_tables.py
 ```
 
 Output goes to `output/`. These figures and tables are identical to those of the paper.
-`output/fig4_section_numbers.json` holds the values of the Figure 4g,h sections quoted in Section 3.4.
+`output/fig4_section_numbers.json` and `output/text_s3_numbers.json` hold the values quoted in the text from the
+Figure 4g,h sections (Section 3.4) and from the maritime-flow diagnostics (Sections 3.3 and 3.5).
 
 ## Observations
 
@@ -62,7 +64,7 @@ Observations are not redistributed. `make_observation_figures.py` reads them fro
 | `mtg/20261004T0000/` | FCI Level 1c body chunks 33–37 of the 0000 UTC 4 October cycle | EUMETSAT Data Store, EO:EUM:DAT:0662 |
 | `radar/` | Gelida volume `esgld@20261004T0007@0.5_1.5@DBZH_VRADH.h5` and composite `OPERA@20261004T0005@0@DBZH.h5` | EUMETNET OPERA Open Radar Data |
 | `sounding/` | Barcelona 1 s soundings `26100300.txt`, `26100400.txt` | Servei Meteorològic de Catalunya |
-| `stations/` | `hourly_surface.csv` (columns in `warmsea/observations.py`), and the XEMA pressure files | AEMET, Météo-France, Puertos del Estado, Servei Meteorològic de Catalunya |
+| `stations/` | `hourly_surface.csv` (columns in `warmsea/observations.py`), and the XEMA pressure files | AEMET, Météo-France, Servei Meteorològic de Catalunya |
 | `icgc/` | County boundaries (`*comarques*.shp`) | Institut Cartogràfic i Geològic de Catalunya |
 | `rainfall_reference/` | 0.25 km radar–gauge analysis | not public (below) |
 
@@ -77,8 +79,9 @@ The full output (about 100 GB per run) is not archived. With it, the dataset is 
 
 ```bash
 python scripts/diagnose_vortices.py --runs RUNS --cache CACHE --out DIAGNOSTICS
+python scripts/maritime_flow.py --runs RUNS --out DIAGNOSTICS
 RTTOV_DIR=... python scripts/simulate_satellite.py --runs RUNS --out RTTOV
-python scripts/export_dataset.py --runs RUNS --selection SELECTION --diagnostics DIAGNOSTICS --rttov RTTOV ...
+python scripts/export_dataset.py --runs RUNS --rttov RTTOV --diagnostics DIAGNOSTICS ... --out DATASET
 ```
 
 ## Licence

@@ -126,14 +126,14 @@ def land_mask(glon, glat, buffer_m=0.0):
 # ------------------------------------------------------------------ surface stations
 def stations():
     """Hourly station table (stations/hourly_surface.csv): network, station_id, lat, lon, alt, time (UTC),
-    psfc_hPa, mslp_hPa, wspd_ms, wdir_deg, gust_ms. AEMET, Meteo-France, XEMA and Puertos del Estado buoys."""
+    psfc_hPa, mslp_hPa, wspd_ms, wdir_deg, gust_ms. AEMET, Meteo-France and XEMA."""
     return pd.read_csv(OBS / 'stations/hourly_surface.csv', parse_dates=['time'], dtype={'station_id': str})
 
 
 def pressure_perturbation(base=('2026-10-03 12:00', '2026-10-03 18:00')):
     """Hourly pressure perturbation per station: pressure minus the station's mean over base, minus the median of
     these anomalies over all stations at the same time. XEMA station pressure (variable 34) from the Meteocat open-data
-    files; AEMET and Meteo-France station pressure, or sea-level pressure for the buoys. Stations above 600 m excluded."""
+    files; AEMET and Meteo-France station pressure, or sea-level pressure where station pressure is missing. Stations above 600 m excluded."""
     xd = OBS / 'stations'
     r = pd.DataFrame(json.loads((xd / 'xema_p34_t32_20261003_04.json').read_text()))
     meta = pd.DataFrame(json.loads((xd / 'xema_stations_metadata.json').read_text()))
@@ -152,7 +152,7 @@ def pressure_perturbation(base=('2026-10-03 12:00', '2026-10-03 18:00')):
     w = w[w.alt < 600]
     xema = pd.DataFrame({'id': 'XEMA:' + w.codi_estacio, 'lat': w.lat, 'lon': w.lon, 'time': w.time, 'p': w['34']})
     a = stations()
-    a = a[a.network.isin(['AEMET', 'PORTUS', 'MF'])].copy()
+    a = a[a.network.isin(['AEMET', 'MF'])].copy()
     a['p'] = a.psfc_hPa.where(a.psfc_hPa.notna(), a.mslp_hPa)
     a.loc[a.psfc_hPa.notna() & (a.alt.fillna(0) >= 600), 'p'] = np.nan
     other = pd.DataFrame(

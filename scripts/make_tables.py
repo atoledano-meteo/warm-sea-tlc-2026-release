@@ -1,8 +1,9 @@
-"""Tables S1 to S3 of the Supporting Information, as LaTeX.
+"""Tables S1 to S3 of the Supporting Information, as LaTeX, and the Text S3 numbers (output/text_s3_numbers.json).
 
 python scripts/make_tables.py
 """
 
+import json
 import sys
 from pathlib import Path
 import numpy as np
@@ -89,29 +90,28 @@ Forcing & Physics & $\zeta_m$ ($f$) & Bias (mm) & FSS$_{50}$ & FSS$_{100}$ & P99
 
 
 BLOCKS = [
-    ('Morrison--YSU', '', ('clim', 'curr', 'plus2k')),
-    ('Thompson--MYNN', 'tmynn_', ('clim', 'curr', 'plus2k')),
-    ('Morrison--YSU', '', ('plus2kall',)),
+    ('Morrison--YSU (selected configuration)', '', ('clim', 'curr', 'plus2k', 'plus2kall')),
+    ('Thompson--MYNN (Robustness test)', 'tmynn_', ('clim', 'curr', 'plus2k')),
 ]
 SST = {'clim': 'CLIM', 'curr': 'CURR', 'plus2k': '+2K', 'plus2kall': '+2K-ALL'}
 
 
-def block_rows(fmt, states=None):
-    rows, prev = [], None
-    for physics, prefix, ssts in BLOCKS:
+def block_rows(fmt, ncol, states=None):
+    """One block per physics, headed by a spanning row; within it, the SST states of each member."""
+    rows = []
+    for b, (title, prefix, ssts) in enumerate(BLOCKS):
+        if b:
+            rows.append(r'\hline')
+        rows.append(rf'\multicolumn{{{ncol}}}{{l}}{{\textit{{{title}}}}} \\')
         for mem in ('ctrl', 'skb1', 'skb2'):
+            first = True
             for sst in ssts:
-                if states and sst not in states and sst != 'plus2kall':
+                if states and sst not in states:
                     continue
-                block = (physics, sst == 'plus2kall')
-                if prev is not None and block != prev:
-                    rows.append(r'\hline')
                 rows.append(
-                    f"{physics if block != prev else ''} & {mem.upper()} & {SST[sst]} & "
-                    + ' & '.join(fmt(f'{prefix}{sst}_{mem}'))
-                    + r' \\'
+                    f"{mem.upper() if first else ''} & {SST[sst]} & " + ' & '.join(fmt(f'{prefix}{sst}_{mem}')) + r' \\'
                 )
-                prev = block
+                first = False
     return '\n'.join(rows)
 
 
@@ -125,13 +125,13 @@ def table_s2():
 \caption{Rainfall and Mesoscale Convective Vortex in All Simulations}
 \label{tab:mcv}
 \centering\fontsize{8.5}{10.5}\selectfont\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{5pt}\vspace{3pt}
-\begin{tabular}{lllccc}
+\begin{tabular}{llccc}
 \hline
- & & & Rain & \multicolumn{2}{c}{MCV} \\
-Physics & Member & SST & $R$ (mm) & $\zeta_m$ ($f$) & $\zeta_{10\,\mathrm{m}}$ ($f$) \\
+ & & Rain & \multicolumn{2}{c}{MCV} \\
+Member & SST & $R$ (mm) & $\zeta_m$ ($f$) & $\zeta_{10\,\mathrm{m}}$ ($f$) \\
 \hline
 """
-        + block_rows(fmt)
+        + block_rows(fmt, 5)
         + r"""
 \hline
 \end{tabular}
@@ -160,12 +160,12 @@ def table_s3():
 \caption{Surface Cyclone Associated With the MCV, Over the Sea}
 \label{tab:cyclone}
 \centering\fontsize{8.5}{10.5}\selectfont\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{5pt}\vspace{3pt}
-\begin{tabular}{lllccccc}
+\begin{tabular}{llccccc}
 \hline
-Physics & Member & SST & \shortstack{Depth\\(hPa)} & \shortstack{$V_{10}$\\(m~s$^{-1}$)} & \shortstack{Over sea\\(h)} & \shortstack{Warm core\\(h)} & \shortstack{Tropical-like\\(h)} \\
+Member & SST & \shortstack{Depth\\(hPa)} & \shortstack{$V_{10}$\\(m~s$^{-1}$)} & \shortstack{Over sea\\(h)} & \shortstack{Warm core\\(h)} & \shortstack{Tropical-like\\(h)} \\
 \hline
 """
-        + block_rows(fmt, states=('curr', 'plus2k'))
+        + block_rows(fmt, 7, states=('curr', 'plus2k', 'plus2kall'))
         + r"""
 \hline
 \end{tabular}
@@ -175,7 +175,27 @@ Physics & Member & SST & \shortstack{Depth\\(hPa)} & \shortstack{$V_{10}$\\(m~s$
     )
 
 
+def text_s3():
+    """Changes of the maritime-flow latent heat flux and 0-1 km theta-e quoted in Sections 3.3 and 3.5 (Text S3),
+    relative to the same member in CURR."""
+    m = (
+        pd.read_csv(DATASET / 'diagnostics/maritime_flow.csv', parse_dates=['time'])
+        .groupby('run')
+        .mean(numeric_only=True)
+    )
+    out = {}
+    for mem in ('ctrl', 'skb1', 'skb2'):
+        c = m.loc[f'curr_{mem}']
+        out[mem] = {
+            f'{sst}_latent_heat_change_pct': 100 * (m.loc[f'{sst}_{mem}', 'latent_heat_W_m2'] / c.latent_heat_W_m2 - 1)
+            for sst in ('clim', 'plus2k', 'plus2kall')
+        } | {'clim_theta_e_change_K': m.loc[f'clim_{mem}', 'theta_e_0_1km_K'] - c.theta_e_0_1km_K}
+    return out
+
+
 if __name__ == '__main__':
     for name, f in (('si_table_selection', table_s1), ('si_table_mcv', table_s2), ('si_table_cyclone', table_s3)):
         (OUT / f'{name}.tex').write_text(HEAD + f())
         print('written', OUT / f'{name}.tex')
+    (OUTPUT / 'text_s3_numbers.json').write_text(json.dumps(text_s3(), indent=1) + '\n')
+    print('written', OUTPUT / 'text_s3_numbers.json')

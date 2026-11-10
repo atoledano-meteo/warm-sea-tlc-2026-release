@@ -601,13 +601,13 @@ def figS3():
     (d) mean vorticity profile within 50 km of the MCV center, 2200-0800 UTC."""
     H = pd.read_csv(DATASET / 'diagnostics/associated_cyclone_hourly.csv', parse_dates=['time'])
     RUNS = [
-        ('curr_ctrl', 'CURR CTRL', SSTC['curr'], 'o'),
-        ('curr_skb1', 'CURR SKB1', SSTC['curr'], 's'),
-        ('plus2k_ctrl', '+2K CTRL', SSTC['plus2k'], 'o'),
-        ('plus2k_skb1', '+2K SKB1', SSTC['plus2k'], 's'),
-        ('plus2k_skb2', '+2K SKB2', SSTC['plus2k'], '^'),
-        ('plus2kall_ctrl', '+2K-ALL CTRL', SSTC['plus2kall'], 'o'),
-        ('plus2kall_skb1', '+2K-ALL SKB1', SSTC['plus2kall'], 's'),
+        ('curr_ctrl', SSTC['curr'], 'o'),
+        ('curr_skb1', SSTC['curr'], 's'),
+        ('plus2k_ctrl', SSTC['plus2k'], 'o'),
+        ('plus2k_skb1', SSTC['plus2k'], 's'),
+        ('plus2k_skb2', SSTC['plus2k'], '^'),
+        ('plus2kall_ctrl', SSTC['plus2kall'], 'o'),
+        ('plus2kall_skb1', SSTC['plus2kall'], 's'),
     ]
     fig = plt.figure(figsize=(W, 5.6))
     g = fig.add_gridspec(2, 2, wspace=0.28, hspace=0.3, left=0.07, right=0.99, top=0.97, bottom=0.13)
@@ -615,8 +615,7 @@ def figS3():
     ax.set_extent([1.2, 5.6, 40.2, 42.6], crs=PC)
     coast(ax, '10m')
     pa, pb, pc = fig.add_subplot(g[0, 1]), fig.add_subplot(g[1, 0]), fig.add_subplot(g[1, 1])
-    handles = []
-    for run, lab, col, mk in RUNS:
+    for run, col, mk in RUNS:
         d = H[H.run == run].sort_values('time')
         if d.empty:
             continue
@@ -634,7 +633,6 @@ def figS3():
                     a.plot(sm[xk], sm[yk], color=col, lw=1.1, ls='-', zorder=3)
                     a.plot(sm[xk].iloc[-1], sm[yk].iloc[-1], marker=mk, ms=4, color=col, zorder=4)
                     a.plot(sm[xk].iloc[0], sm[yk].iloc[0], marker=mk, ms=4, mfc='white', mec=col, mew=0.8, zorder=4)
-        handles.append(plt.Line2D([], [], color=col, marker=mk, ms=3.5, lw=0.7, label=lab))
     latlon(ax, range(2, 6), range(41, 43))
     letter(ax, 'a')
     pa.axvline(0, color='.5', lw=0.5)
@@ -683,22 +681,24 @@ def figS3():
         plt.Line2D([], [], color='.3', ls=ls, marker=mk, ms=2.6, lw=1, label=l)
         for ls, mk, l in (('-', 'o', 'CTRL'), ('--', 's', 'SKB1'), (':', '^', 'SKB2'))
     ]
-    pc.legend(
-        handles=pc.get_legend_handles_labels()[0] + style,
-        fontsize=5.8,
-        loc='upper right',
-        frameon=False,
-        handlelength=2.2,
-        labelspacing=0.25,
-    )
+    exps = [
+        plt.Line2D([], [], color=SSTC[k], lw=1.5, label=l)
+        for k, l in (('clim', 'CLIM'), ('curr', 'CURR'), ('plus2k', '+2K'), ('plus2kall', '+2K-ALL'))
+    ]
     letter(pc, 'd')
     for a in (pa, pb, pc):
         a.tick_params(labelsize=6.5)
         a.xaxis.label.set_size(7)
         a.yaxis.label.set_size(7)
         a.grid(color='.92', lw=0.4)
-    fig.legend(
-        handles=handles, loc='lower center', ncol=4, fontsize=6.2, frameon=False, handlelength=2, columnspacing=1.2
+    fig.legend(  # colors: experiment; markers and line styles: member
+        handles=exps + style,
+        loc='lower center',
+        ncol=7,
+        fontsize=6.2,
+        frameon=False,
+        handlelength=2.2,
+        columnspacing=1.4,
     )
     save(fig, FIG / 'figS3_cyclones.png')
 

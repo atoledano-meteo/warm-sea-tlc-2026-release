@@ -131,7 +131,7 @@ def surface_panel(fig, cell, t):
         & d.wdir_deg.notna()
         & d.wspd_ms.notna()
         & (d.alt.fillna(0) < 300)
-        & d.network.isin(['AEMET', 'XEMA', 'MF', 'PORTUS'])
+        & d.network.isin(['AEMET', 'XEMA', 'MF'])
     ]
     w = w[w.lat.between(ZOOM[2] - 0.2, ZOOM[3] + 0.2) & w.lon.between(ZOOM[0] - 0.2, ZOOM[1] + 0.2)].copy()
     w['u'] = -w.wspd_ms * np.sin(np.radians(w.wdir_deg))

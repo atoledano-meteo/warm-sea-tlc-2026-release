@@ -3,7 +3,8 @@
 The full output (about 100 GB per run) is not archived. This script shows how each archived field was obtained;
 it only runs where the original output is available.
 
-    python scripts/export_dataset.py --runs /path/to/runs --diagnostics /path/to/diagnostics --out /path/to/dataset
+    python scripts/export_dataset.py --runs RUNS --rttov RTTOV --diagnostics DIAGNOSTICS --weights WEIGHTS \
+        --reference REFERENCE --scores SCORES --out DATASET [steps]
 """
 
 import argparse
@@ -18,18 +19,26 @@ from scipy.ndimage import gaussian_filter
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from warmsea.runs import SST_RUNS, SELECTION_RUNS, MAP_TIMES, SECTIONS
+from warmsea.runs import SST_RUNS, MAP_TIMES, SECTIONS
 from warmsea.wrf import mslp
 
 ZLIB = {'zlib': True, 'complevel': 4}
+SOURCE = (
+    'WRF-ARW 4.6.1; Toledano et al., A Warmer Sea Turns a Mediterranean Convective Vortex Into a Tropical-Like Cyclone'
+)
+LATLON = {'lat': {'units': 'degree_north'}, 'lon': {'units': 'degree_east'}}
 
 
 def wrfout(run_dir, t, dom=2):
     return run_dir / 'wrf' / f'wrfout_d{dom:02d}_{t:%Y-%m-%d_%H}:00:00'
 
 
-def write(ds, path, single=True):
+def write(ds, path, title, single=True, **attrs):
     path.parent.mkdir(parents=True, exist_ok=True)
+    ds.attrs = {'title': title, 'source': SOURCE, **attrs}
+    for k, a in LATLON.items():
+        if k in ds.variables:
+            ds[k].attrs.update(a)
     enc = {v: dict(ZLIB, dtype='float32') if single else ZLIB for v in ds.data_vars if ds[v].dtype.kind == 'f'}
     ds.to_netcdf(path, encoding=enc)
 
@@ -40,28 +49,33 @@ def grid(src, out):
     for d in ('d01', 'd02'):
         with Dataset(src / f'wrf/wrfinput_{d}') as n:
             for k in ('XLONG', 'XLAT', 'HGT', 'LANDMASK', 'LAKEMASK'):
-                v[f'{k.lower()}_{d}'] = ((f'y_{d}', f'x_{d}'), np.asarray(n[k][0], 'f4'))
-    write(xr.Dataset(v), out / 'grid.nc')
+                attrs = {'wrf_name': k, 'description': n[k].description, 'units': n[k].units}
+                v[f'{k.lower()}_{d}'] = ((f'y_{d}', f'x_{d}'), np.asarray(n[k][0], 'f4'), attrs)
+    write(xr.Dataset(v), out / 'grid.nc', 'WRF grids: d01 (9 km) and d02 (3 km)')
 
 
 def sst(runs, out):
     """Hourly SST read by WRF (wrflowinp) for each SST state, on both domains."""
-    for state in ('clim', 'curr', 'plus2k', 'plus2kall'):
+    for state in ('clim', 'curr', 'plus2k'):  # +2K-ALL reads the +2K SST (its wrflowinp differs only over land)
         run = f'{state}_ctrl'
         v = {}
         for d in ('d01', 'd02'):
             with Dataset(runs / run / f'wrf/wrflowinp_{d}') as n:
                 times = pd.to_datetime([b''.join(t).decode() for t in n['Times'][:]], format='%Y-%m-%d_%H:%M:%S')
-                v[f'sst_{d}'] = (('time', f'y_{d}', f'x_{d}'), np.asarray(n['SST'][:], 'f4'))
+                attrs = {'wrf_name': 'SST', 'description': n['SST'].description, 'units': n['SST'].units}
+                v[f'sst_{d}'] = (('time', f'y_{d}', f'x_{d}'), np.asarray(n['SST'][:], 'f4'), attrs)
         ds = xr.Dataset(v, coords={'time': times})
-        ds.attrs['units'] = 'K'
-        write(ds, out / 'sst' / f'{state}.nc')
+        write(
+            ds,
+            out / 'sst' / f'{state}.nc',
+            f'Hourly SST read by WRF (wrflowinp), {state.upper()} state; values over land are not used',
+        )
 
 
-def rainfall(runs, sel_runs, out):
+def rainfall(runs, out):
     """Hourly rainfall (RAINC + RAINNC + RAINSH) on the 3 km domain, 48 h from 2200 UTC 2 October."""
-    src = [(n, runs / n) for n in SST_RUNS] + [(n, sel_runs / n) for n in SELECTION_RUNS]
-    for name, run_dir in src:
+    for name in SST_RUNS:
+        run_dir = runs / name
         with xr.open_dataset(run_dir / 'validation/tolemeteo_primary/rainfall_48h_native.nc') as d:
             ds = xr.Dataset(
                 {'rain': (('time', 'y', 'x'), d.rainfall_mm.values)},
@@ -71,8 +85,8 @@ def rainfall(runs, sel_runs, out):
                     'lon': (('y', 'x'), d.longitude.values),
                 },
             )
-        ds.rain.attrs = {'units': 'mm', 'long_name': 'rainfall in the hour ending at time'}
-        write(ds, out / 'rainfall' / f'{name}.nc')
+        ds.rain.attrs = {'units': 'mm', 'description': 'RAINC + RAINNC + RAINSH accumulated in the hour ending at time'}
+        write(ds, out / 'rainfall' / f'{name}.nc', 'Hourly rainfall on d02', run=name)
 
 
 def verification_region(runs, out):
@@ -81,8 +95,8 @@ def verification_region(runs, out):
             {'mask': (('y', 'x'), d.valid_comparison_mask.values.astype('i1'))},
             coords={'lat': (('y', 'x'), d.latitude.values), 'lon': (('y', 'x'), d.longitude.values)},
         )
-    ds.attrs['note'] = '3 km common grid (UTM 31N); mask = 1 inside the verification region'
-    write(ds, out / 'verification_region.nc')
+    ds.mask.attrs['description'] = '1 inside the verification region'
+    write(ds, out / 'verification_region.nc', 'Verification region on the 3 km verification grid (UTM 31N)')
 
 
 def surface_fields(run_dir, t, centre):
@@ -167,12 +181,28 @@ def maps(runs, rttov, out):
                 'lat_bt': (('yb', 'xb'), b['lat']),
                 'lon_bt': (('yb', 'xb'), b['lon']),
             },
-            attrs={'time': f'{t:%Y-%m-%d %H:%M}', 'centre_lat': F['yc'], 'centre_lon': F['xc']},
         )
-        ds.p.attrs['units'] = 'hPa'
-        ds.dbz.attrs['units'] = 'dBZ'
-        ds.bt.attrs['units'] = 'degC'
-        write(ds, out / 'maps' / f'{name}_{t:%Y%m%d%H}.nc', single=False)  # double precision: contours as in the paper
+        for k, units, desc in (
+            ('p', 'hPa', 'sea-level pressure from PSFC, T2 and HGT (6.5 K/km), smoothed; missing above 300 m'),
+            ('u', 'm s-1', '10 m eastward wind (U10, V10 rotated to Earth coordinates)'),
+            ('v', 'm s-1', '10 m northward wind (U10, V10 rotated to Earth coordinates)'),
+            ('dbz', 'dBZ', 'column maximum of REFL_10CM'),
+            ('bt', 'degC', 'MTG-I1 FCI 10.5 um brightness temperature simulated with RTTOV 14.1'),
+        ):
+            ds[k].attrs = {'units': units, 'description': desc}
+        ds.lat_bt.attrs.update(LATLON['lat'])
+        ds.lon_bt.attrs.update(LATLON['lon'])
+        write(
+            ds,
+            out / 'maps' / f'{name}_{t:%Y%m%d%H}.nc',
+            'Map fields of Figures 4 and S4',
+            single=False,  # double precision: contours as in the paper
+            run=name,
+            time=f'{t:%Y-%m-%d %H:%M} UTC',
+            centre_lat=F['yc'],
+            centre_lon=F['xc'],
+            centre='sea-level pressure minimum',
+        )
 
 
 def sections(runs, out):
@@ -203,26 +233,33 @@ def sections(runs, out):
                 'rain': ('x', M['rain']),
             },
             coords={'x': S[0]['x'], 'z': S[0]['z']},
-            attrs={'start': f'{hrs[0]:%Y-%m-%d %H:%M}', 'end': f'{hrs[-1]:%Y-%m-%d %H:%M}'},
         )
-        for k, u in (
-            ('ta', 'K'),
-            ('cond', 'g kg-1'),
-            ('vr', 'm s-1'),
-            ('hgt', 'm'),
-            ('slp', 'hPa'),
-            ('rain', 'mm h-1'),
-            ('x', 'km'),
-            ('z', 'm'),
+        for k, units, desc in (
+            ('ta', 'K', 'virtual-temperature anomaly relative to the marine columns 100-150 km from the centre'),
+            ('cond', 'g kg-1', 'QCLOUD + QICE + QSNOW + QGRAUP'),
+            ('vr', 'm s-1', 'storm-relative northward wind'),
+            ('hgt', 'm', 'terrain height (HGT)'),
+            ('slp', 'hPa', 'sea-level pressure from PSFC, T2 and HGT (6.5 K/km)'),
+            ('rain', 'mm h-1', 'RAINC + RAINNC in the previous hour'),
+            ('x', 'km', 'distance east of the sea-level pressure minimum'),
+            ('z', 'm', 'height above sea level'),
         ):
-            ds[k].attrs['units'] = u
-        write(ds, out / 'sections' / f'{name}.nc', single=False)
+            ds[k].attrs = {'units': units, 'description': desc}
+        write(
+            ds,
+            out / 'sections' / f'{name}.nc',
+            'Five-hour mean west-east section of Figure 4g,h',
+            single=False,
+            run=name,
+            start=f'{hrs[0]:%Y-%m-%d %H:%M} UTC',
+            end=f'{hrs[-1]:%Y-%m-%d %H:%M} UTC',
+        )
 
 
 def diagnostics(diag, out):
-    """MCV and surface-cyclone tables written by diagnose_vortices.py."""
+    """Tables written by diagnose_vortices.py and maritime_flow.py."""
     (out / 'diagnostics').mkdir(parents=True, exist_ok=True)
-    for f in ('mcv_tracks', 'mcv_vertical_profiles', 'associated_cyclone_hourly', 'mcv_cyclone_summary'):
+    for f in ('mcv_vertical_profiles', 'associated_cyclone_hourly', 'mcv_cyclone_summary', 'maritime_flow'):
         shutil.copy(diag / f'{f}.csv', out / 'diagnostics' / f'{f}.csv')
 
 
@@ -234,11 +271,11 @@ def regrid(weights, out):
 def scores(reports, out):
     """Rainfall scores and peak MCV vorticity of the configurations of Table S1. The scores compare with the rainfall
     reference, which is not archived (see README)."""
-    d = pd.read_csv(reports / 'selection/zeus_reruns/selection_metrics.csv').set_index('case')
+    d = pd.read_csv(reports / 'zeus_reruns/selection_metrics.csv').set_index('case')
     mcv = pd.concat(
         [
-            pd.read_csv(reports / 'selection/zeus_reruns/selection_mcv.csv').set_index('case').mcv_peak_f,
-            pd.read_csv(reports / 'selection/selection_mcv.csv').set_index('case').mcv_peak_f.filter(like='rep_zeus'),
+            pd.read_csv(reports / 'zeus_reruns/selection_mcv.csv').set_index('case').mcv_peak_f,
+            pd.read_csv(reports / 'selection_mcv.csv').set_index('case').mcv_peak_f.filter(like='rep_zeus'),
         ]
     )
     name = {
@@ -301,13 +338,11 @@ if __name__ == '__main__':
     a.add_argument(
         '--runs', type=Path, required=True, help='one folder per run of the SST experiments (names in warmsea/runs.py)'
     )
-    a.add_argument('--selection', type=Path, required=True, help='one folder per other configuration of Table S1')
-    a.add_argument('--diagnostics', type=Path, required=True, help='folder with the tables of diagnose_vortices.py')
-    a.add_argument(
-        '--rttov', type=Path, required=True, help='simulated brightness temperatures (simulate_satellite.py)'
-    )
+    a.add_argument('--diagnostics', type=Path, help='folder with the tables of diagnose_vortices.py')
+    a.add_argument('--rttov', type=Path, help='simulated brightness temperatures (simulate_satellite.py)')
     a.add_argument('--weights', type=Path, help='model-to-verification-grid weights (npz)')
     a.add_argument('--reference', type=Path, help='rainfall reference folder (gauge tables)')
+    a.add_argument('--scores', type=Path, help='folder with the selection scores (selection/zeus_reruns)')
     a.add_argument('--out', type=Path, required=True)
     a.add_argument(
         'steps',
@@ -318,13 +353,13 @@ if __name__ == '__main__':
     steps = dict(
         grid=lambda: grid(o.runs / 'curr_ctrl', o.out),
         sst=lambda: sst(o.runs, o.out),
-        rainfall=lambda: rainfall(o.runs, o.selection, o.out),
+        rainfall=lambda: rainfall(o.runs, o.out),
         verification_region=lambda: verification_region(o.runs, o.out),
         maps=lambda: maps(o.runs, o.rttov, o.out),
         sections=lambda: sections(o.runs, o.out),
         diagnostics=lambda: diagnostics(o.diagnostics, o.out),
         regrid=lambda: regrid(o.weights, o.out),
-        scores=lambda: scores(o.diagnostics, o.out),
+        scores=lambda: scores(o.scores, o.out),
         gauges=lambda: gauges(o.reference, o.out),
     )
     for k in o.steps or steps:
