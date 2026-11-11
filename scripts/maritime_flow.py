@@ -1,11 +1,7 @@
-"""Latent heat flux and 0-1 km equivalent potential temperature of the low-level maritime flow (Text S3), from the
-full WRF output (not archived). Writes the dataset's diagnostics/maritime_flow.csv.
+"""Latent heat flux and 0-1 km theta-e of the low-level maritime flow (Text S3), from the full WRF output; writes
+the dataset's diagnostics/maritime_flow.csv.
 
-    python scripts/maritime_flow.py --runs /path/to/runs --out /path/to/diagnostics
-
-Both are means over the sea cells (no lakes) of 40.5-42.0 N, 1.5-4.0 E on d02, from 1200 UTC 3 to 0600 UTC 4 October:
-LH from every 15 min output, and theta-e (MetPy, Bolton 1980) over the model levels below 1 km above ground at the
-full hours.
+    python scripts/maritime_flow.py --runs RUNS --out DIAGNOSTICS
 """
 
 import argparse

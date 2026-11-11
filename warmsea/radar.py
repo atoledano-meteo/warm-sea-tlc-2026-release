@@ -23,7 +23,7 @@ def _decode(group):
 
 def sweep(path, dataset='dataset1'):
     """Fields (DBZH, VRADH, ...) of one sweep, rays sorted by azimuth, with gate longitude and latitude
-    (4/3 Earth radius beam model). The range of the first gate (rstart) is in metres."""
+    (4/3 Earth radius beam model). The range of the first gate (rstart) is in meters."""
     with h5py.File(path) as h:
         lat0, lon0, h0 = (float(h['where'].attrs[k]) for k in ('lat', 'lon', 'height'))
         d = h[dataset]

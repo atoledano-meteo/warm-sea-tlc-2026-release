@@ -1,11 +1,8 @@
-"""MCV and surface-cyclone diagnostics of every run, from the full WRF output (not archived). Writes the tables in the
-dataset's diagnostics/ folder.
+"""MCV and surface-cyclone diagnostics (Text S2) from the full WRF output; writes the dataset's diagnostics/ tables.
 
-    python scripts/diagnose_vortices.py --runs /path/to/runs --cache /path/to/cache --out /path/to/diagnostics [steps]
+    python scripts/diagnose_vortices.py --runs RUNS --cache CACHE --out DIAGNOSTICS [extract mcv cyclones profiles]
 
-steps: extract mcv cyclones profiles (default: all). `extract` needs wrf-python (we used 1.3.4.1 with NumPy 1.26 in a
-separate environment); the other steps need MetPy and CPyS 1.0.0. --runs holds one folder per run (paper names, see
-warmsea/runs.py) with wrf/wrfout_d02_* files.
+`extract` needs wrf-python 1.3.4.1 (with NumPy 1.26); the other steps need MetPy and CPyS 1.0.0.
 """
 
 import argparse

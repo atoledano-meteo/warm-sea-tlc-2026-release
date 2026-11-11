@@ -1,20 +1,8 @@
-"""MTG-I1 FCI 10.5 um brightness temperature simulated from the WRF 3 km columns with RTTOV 14.1 (Figures 4 and S4).
+"""Simulated MTG-I1 10.5 um brightness temperature (Text S4) with RTTOV 14.1, which is not included.
 
-RTTOV is distributed by the NWP SAF under its own licence and is not included. Set RTTOV_DIR to the RTTOV 14.1 folder
-(with the Python wrapper built). Coefficients: rtcoef_mtg_1_fci_o3co2.dat (54 levels) and the hydrotable
-rttov_hydrotable_mtg_1_fci.dat (all-sky).
+    RTTOV_DIR=/path/to/rttov141 python scripts/simulate_satellite.py --runs RUNS --out RTTOV
 
-Per column, at the hourly output time:
-  layers   the WRF mass levels (temperature from theta, pressure P+PB), top first; half levels midway between them,
-           bounded by P_TOP and PSFC (PSFC raised to half a layer below the lowest level where it is lower)
-  gases    water vapour as specific humidity; O3 and CO2 from the RTTOV reference profile
-  clouds   liquid QCLOUD (parameterised effective diameter); ice QICE+QSNOW+QGRAUP (Baran ice); cloud fraction 0.999999
-           where liquid + ice > 1e-6 kg/kg; rain left out
-  surface  TSK, T2, Q2, U10, V10, land or sea from XLAND, terrain height; RTTOV emissivity models
-  geometry MTG-I1 at 0 E
-
-    RTTOV_DIR=/path/to/rttov141 python scripts/simulate_satellite.py --runs /path/to/runs --out /path/to/folder
-writes <run>_<yyyymmddhh>.npz (lon, lat, ir105, wv63 in degC) for the map times of Figures 4 and S4.
+RTTOV_DIR must hold the built Python wrapper, rtcoef_mtg_1_fci_o3co2.dat and rttov_hydrotable_mtg_1_fci.dat.
 """
 
 import argparse

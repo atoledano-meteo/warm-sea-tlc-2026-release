@@ -1,8 +1,6 @@
-"""Download the ERA5 fields used in Figures 1d and 2c,d from the Copernicus Climate Data Store.
+"""ERA5 fields of Figures 1d and 2c,d from the Copernicus Climate Data Store (needs a CDS account and cdsapi).
 
-Needs a CDS account and the cdsapi package (https://cds.climate.copernicus.eu/how-to-api).
-
-    python scripts/download_era5.py
+python scripts/download_era5.py
 """
 
 import sys

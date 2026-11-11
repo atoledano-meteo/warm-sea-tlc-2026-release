@@ -1,6 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this code, please cite the article and this archive."
-title: "Code for: A Warmer Sea Turns a Mediterranean Convective Vortex Into a Tropical-Like Cyclone"
+title: "Code and model configuration for \"A Warmer Sea Turns a Mediterranean Convective Vortex Into a Tropical-Like Cyclone\""
+type: software
+version: 1.0.0
 license: MIT
 authors:
   - family-names: Toledano

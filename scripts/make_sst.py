@@ -1,17 +1,6 @@
-"""SST states of the experiments, on the WRF grids.
+"""CURR, CLIM and +2K SST on the WRF grids (Section 2.2), read by WRF through wrflowinp.
 
-CURR is the Copernicus Mediterranean L4 subskin SST (hourly, with the diurnal cycle) interpolated bilinearly to the
-marine cells of each domain, with the nearest valid pixel within 25 km where the interpolation has no value
-(`current`). It is archived in the dataset (sst/curr.nc). From it:
-
-  CLIM    CURR minus the 1991-2020 anomaly of the daily Copernicus UHR foundation SST (`climatological`)
-  +2K     CURR + 2 K (`plus2k`)
-
-on marine cells only (land and lakes unchanged). WRF reads these fields through wrflowinp (sst_update = 1).
-
-    python scripts/make_sst.py --anomaly /path/to/SST_MED_SSTA_L4_NRT_OBSERVATIONS_010_004_d --out /path/to/folder
-
-The anomaly files are the daily product of 2 to 5 October 2026 (Copernicus Marine, SST_MED_SSTA_L4_NRT_OBSERVATIONS_010_004_d).
+python scripts/make_sst.py --anomaly /path/to/SST_MED_SSTA_L4_NRT_OBSERVATIONS_010_004_d --out /path/to/folder
 """
 
 import argparse

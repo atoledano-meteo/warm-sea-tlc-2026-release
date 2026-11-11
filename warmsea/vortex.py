@@ -1,8 +1,4 @@
-"""MCV and surface-cyclone diagnostics (Section 2.3 and Text S2 of the paper).
-
-Fields come from the hourly cache written by scripts/diagnose_vortices.py (step `extract`): heights, virtual temperature
-and winds on pressure levels and on height levels, sea-level pressure, and 10 m wind, on the 3 km grid.
-"""
+"""MCV and surface-cyclone diagnostics (Text S2), from the hourly cache of scripts/diagnose_vortices.py."""
 
 import numpy as np
 import pandas as pd
@@ -53,7 +49,7 @@ def layer_vorticity(d, g, attrs, levels=(500, 600)):
 
 
 def filtered(field, sigma, dx):
-    """Gaussian-smoothed vorticity in units of f, normalised near missing values; -inf where the kernel is incomplete."""
+    """Gaussian-smoothed vorticity in units of f, normalized near missing values; -inf where the kernel is incomplete."""
     valid = np.isfinite(field)
     w = gaussian_filter(valid.astype(float), sigma / dx)
     return np.where(
@@ -79,7 +75,7 @@ def track_mcv(
 ):
     """MCV of the simulated system.
     1. candidates: local maxima >= 0.4 f of the vorticity filtered at 40 km, at least 40 km apart;
-    2. linking: one-to-one assignment minimising the mean distance to the last and the extrapolated position, at most
+    2. linking: one-to-one assignment minimizing the mean distance to the last and the extrapolated position, at most
        100 km per hour, one missing hour allowed;
     3. MCV: among tracks with a maximum >= 0.75 f (20 km filter) within 50 km of the genesis region between 1800 UTC 3 and
        0600 UTC 4 October, the one with the largest model rainfall within 50 km up to 0800 UTC 4 October.

@@ -1,4 +1,4 @@
-"""Common figure style: fonts and sizes (AGU), colours, map helpers."""
+"""Common figure style: fonts and sizes, colors, map helpers."""
 
 import numpy as np
 import matplotlib
@@ -63,7 +63,7 @@ def rain_cmap():
 
 
 def ir_cmap():
-    """Enhanced infrared scale: magenta below -80 C, greys -80 to -70 C, colours -70 to -20 C, greys above -20 C."""
+    """Enhanced infrared scale: magenta below -80 C, grays -80 to -70 C, colors -70 to -20 C, grays above -20 C."""
     nodes = [
         (-90, '#a21caf'),
         (-80, '#f0abfc'),

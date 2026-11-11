@@ -1,4 +1,4 @@
-"""Tables S1 to S3 of the Supporting Information, as LaTeX, and the Text S3 numbers (output/text_s3_numbers.json).
+"""Tables S1 to S3 (LaTeX) and the Text S3 numbers (output/text_s3_numbers.json).
 
 python scripts/make_tables.py
 """
@@ -83,7 +83,7 @@ Forcing & Physics & $\zeta_m$ ($f$) & Bias (mm) & FSS$_{50}$ & FSS$_{100}$ & P99
         + r"""
 \hline
 \end{tabular}
-\tablenote{48 h rainfall against the merged reference over the verification region. $\zeta_m$, peak MCV vorticity (Text S2.1); dash, no MCV. Bias, mean model minus reference. FSS$_{50}$ and FSS$_{100}$, fractions skill scores (Roberts \& Lean, 2008) for 50~mm at 51~km and 100~mm at 27~km. P99, 99th percentile. Top 20, mean error at the 20 wettest of 301 gauges with complete 48 h totals. $r$, correlation of the regional-mean hourly gauge series; Lag, delay of the model 3-h rainfall peak. Bold: the selected configuration (CTRL of the SST experiments); SKB1 and SKB2: its stochastic members in CURR.}
+\tablenote{48 h rainfall against the merged reference over the verification region. $\zeta_m$, peak MCV vorticity (Text S2.1); dash, no MCV. Bias, mean model minus reference. FSS$_{50}$ and FSS$_{100}$, fractions skill scores (Roberts \& Lean, 2008) for 50~mm at 51~km and 100~mm at 27~km. P99, 99th percentile of the 48 h rainfall over the verification region. Top 20, mean error at the 20 wettest of 301 gauges with complete 48 h totals. $r$, correlation of the regional-mean hourly gauge series; Lag, delay of the model 3-h rainfall peak. Bold: the selected configuration (CTRL of the SST experiments); SKB1 and SKB2: its stochastic members.}
 \end{table}
 """
     )
@@ -135,7 +135,7 @@ Member & SST & $R$ (mm) & $\zeta_m$ ($f$) & $\zeta_{10\,\mathrm{m}}$ ($f$) \\
         + r"""
 \hline
 \end{tabular}
-\tablenote{$R$, 48 h mean rainfall over the verification region (observed 47.1~mm). $\zeta_m$, peak MCV vorticity; $\zeta_{10\,\mathrm{m}}$, vorticity at 10~m below the MCV, mean of 2200~UTC 3 to 0800~UTC 4 October (Text S2.1, Figure S3d).}
+\tablenote{$R$, 48 h mean rainfall over the verification region. $\zeta_m$, peak MCV vorticity; $\zeta_{10\,\mathrm{m}}$, vorticity at 10~m below the MCV, mean of 2200~UTC 3 to 0800~UTC 4 October (Text S2.1, Figure S3d).}
 \end{table}
 """
     )
@@ -169,7 +169,7 @@ Member & SST & \shortstack{Depth\\(hPa)} & \shortstack{$V_{10}$\\(m~s$^{-1}$)} &
         + r"""
 \hline
 \end{tabular}
-\tablenote{In CLIM, only two members have an associated surface cyclone, less than 2~hPa deep and without a warm core (not shown). Depth, largest depth $\Delta p$ of the cyclone; $V_{10}$, maximum 10 m wind (both Text S2.2). Over sea, hourly outputs with the center over the sea; Warm core and Tropical-like, those meeting the thermal criteria (Text S2.3) and the tropical-like criteria (Text S2.4). $^{a}$Eye-like feature; 15 consecutive hourly outputs; still over the sea when the run ends (0000~UTC 5 October).}
+\tablenote{In CLIM, only two members have an associated surface cyclone, less than 2~hPa deep and without a warm core (not shown). Depth, largest depth $\Delta p$ of the cyclone; $V_{10}$, maximum 10 m wind (both Text S2.2). Over sea, hourly outputs with the center over the sea; Warm core and Tropical-like, those meeting the thermal criteria (Text S2.3) and the tropical-like criteria (Text S2.4). $^{a}$Eye-like feature.}
 \end{table}
 """
     )

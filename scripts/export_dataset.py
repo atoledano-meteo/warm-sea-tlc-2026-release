@@ -1,7 +1,4 @@
-"""Write the archived dataset from the full WRF output.
-
-The full output (about 100 GB per run) is not archived. This script shows how each archived field was obtained;
-it only runs where the original output is available.
+"""Dataset files from the full WRF output (not archived).
 
     python scripts/export_dataset.py --runs RUNS --rttov RTTOV --diagnostics DIAGNOSTICS --weights WEIGHTS \
         --reference REFERENCE --scores SCORES --out DATASET [steps]

@@ -1,5 +1,4 @@
-"""Run names used in the paper, the dataset and the scripts. The values are the names of the original run folders,
-kept as a record of provenance."""
+"""Run names used in the paper, the dataset and the scripts."""
 
 # SST experiments (Tables S2 and S3). Name: [physics_]sst_member; physics is Morrison-YSU unless it starts with tmynn.
 SST_RUNS = {}

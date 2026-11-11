@@ -1,10 +1,7 @@
-"""Figures 1, S1 and S2, which show observations.
+"""Figures 1, S1 and S2, from the observations in the `observations` folder of config.yaml (see README).
 
-    python scripts/make_observation_figures.py            # all three
-    python scripts/make_observation_figures.py S1
-
-The observations are not redistributed; the folder set as `observations` in config.yaml must hold the files listed
-in the README. Figures 1b, 1c and S2 also need the rainfall reference, which is not public.
+python scripts/make_observation_figures.py            # all
+python scripts/make_observation_figures.py S1         # some
 """
 
 import sys
@@ -356,6 +353,17 @@ def figS1():
             zorder=2,
         )
         letter(ax, 'abc'[k])
+        ax.text(
+            0.97,
+            0.03,
+            ('2355 UTC 3 to 0005 UTC 4 October', '0008 UTC 4 October', '0008 UTC 4 October')[k],
+            transform=ax.transAxes,
+            ha='right',
+            va='bottom',
+            fontsize=5.5,
+            bbox=dict(fc='white', ec='none', alpha=0.85, pad=1),
+            zorder=20,
+        )
         if k == 0:  # radar names in panel a
             for (x, y), nm in ((GELIDA, 'Gelida'), (OPOUL, 'Opoul')):
                 ax.text(
@@ -424,7 +432,7 @@ def figS2():
     for a in axs:
         a.apply_aspect()
     p0, p1, p2 = (a.get_position() for a in axs)
-    y0, hc = p0.y0 - 0.17, 0.035  # a and b share one colour bar
+    y0, hc = p0.y0 - 0.17, 0.035  # a and b share one color bar
     for (x0, x1), im, ex, tk, lab in (
         (
             (p0.x0 + 0.2 * p0.width, p1.x1 - 0.2 * p1.width),

@@ -1,4 +1,4 @@
-"""Small WRF helpers. Thermodynamic conversions use MetPy."""
+"""WRF helpers."""
 
 import numpy as np
 from metpy import calc as mc

@@ -1,9 +1,7 @@
-"""Figures of the letter and the Supporting Information.
+"""Figures 2, 3, 4, S3 and S4, from the dataset and ERA5.
 
-    python scripts/make_figures.py            # all figures
-    python scripts/make_figures.py 3 4 S3     # some of them
-
-Model fields are read from the dataset; ERA5 and observations from the folders in config.yaml.
+python scripts/make_figures.py            # all
+python scripts/make_figures.py 3 4 S3     # some
 """
 
 import json
@@ -515,10 +513,6 @@ def fig4(rows=(('curr_skb1', 'CURR'), ('plus2k_skb1', '+2K')), sections=True, na
                     t_.set_zorder(10)
             coast(ax, color=cc if j < 2 else '#8a8780', lw=0.6 if j < 2 else 1.1)
             latlon(ax, np.arange(-4, 12, 2), np.arange(36, 47, 1), left=(j == 0), bottom=(i == n - 1), right=(j == 2))
-            if i == 0 and sections:  # Figure 4 only; in Figure S4 the colorbars name the fields
-                ax.set_title(
-                    ('Simulated 10.5 µm', 'Reflectivity', '10 m wind speed, sea-level pressure')[j], fontsize=7
-                )
             ax.text(
                 0.97,
                 0.03,
@@ -624,7 +618,7 @@ def figS3():
             d.lon[~ok], d.lat[~ok], s=11, marker=mk, facecolor='white', edgecolor=col, lw=0.6, transform=PC, zorder=4
         )
         if run in ('curr_skb1', 'plus2k_ctrl', 'plus2k_skb1', 'plus2k_skb2'):
-            sm = d[['B', 'mVTL', 'mVTU']].rolling(5, center=True, min_periods=3).mean()  # 5 h centred running means
+            sm = d[['B', 'mVTL', 'mVTU']].rolling(5, center=True, min_periods=3).mean()  # 5 h centered running means
             for a, (xk, yk) in ((pa, ('mVTL', 'B')), (pb, ('mVTL', 'mVTU'))):
                 a.scatter(d[xk], d[yk], s=6, marker=mk, facecolor='none', edgecolor=col, lw=0.35, alpha=0.45, zorder=2)
                 if len(d) >= 5:

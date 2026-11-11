@@ -1,14 +1,6 @@
-"""Inputs of +2K-ALL (Schär et al., 1996): the WPS met_em files with the atmosphere, land and sea 2 K warmer.
+"""WPS met_em files of +2K-ALL (Text S1): atmosphere, land and sea 2 K warmer at constant relative humidity.
 
-In each met_em file (both domains, every hour, so initial and boundary conditions):
-  TT                       +2 K at every level
-  RH                       unchanged (specific humidity rises with temperature)
-  GHT                      + (Rd * 2 K / g) ln(PSFC / p) above the surface (hydrostatic thickening); terrain unchanged
-  PSFC, PMSL, winds        unchanged
-  SKINTEMP, SST, soil      +2 K
-The SST that WRF then reads (wrflowinp) is the +2K state of make_sst.py.
-
-    python scripts/warm_met_em.py /path/to/met_em /path/to/met_em_plus2kall
+python scripts/warm_met_em.py /path/to/met_em /path/to/met_em_plus2kall
 """
 
 import shutil
