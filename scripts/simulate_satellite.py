@@ -1,4 +1,4 @@
-"""Simulated MTG-I1 10.5 um brightness temperature (Text S4) with RTTOV 14.1, which is not included.
+"""Simulated MTG-I1 10.5 um brightness temperature (Section 2.2) with RTTOV 14.1, which is not included.
 
     RTTOV_DIR=/path/to/rttov141 python scripts/simulate_satellite.py --runs RUNS --out RTTOV
 

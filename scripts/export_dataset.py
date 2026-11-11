@@ -254,9 +254,9 @@ def sections(runs, out):
 
 
 def diagnostics(diag, out):
-    """Tables written by diagnose_vortices.py and maritime_flow.py."""
+    """Tables written by diagnose_vortices.py and air_sea_exchange.py."""
     (out / 'diagnostics').mkdir(parents=True, exist_ok=True)
-    for f in ('mcv_vertical_profiles', 'associated_cyclone_hourly', 'mcv_cyclone_summary', 'maritime_flow'):
+    for f in ('mcv_vertical_profiles', 'associated_cyclone_hourly', 'mcv_cyclone_summary', 'air_sea_exchange'):
         shutil.copy(diag / f'{f}.csv', out / 'diagnostics' / f'{f}.csv')
 
 

@@ -1,4 +1,4 @@
-"""Tables S1 to S3 (LaTeX) and the Text S3 numbers (output/text_s3_numbers.json).
+"""Tables S1 to S3 (LaTeX) and the air-sea exchange changes of Sections 3.3 and 3.5 (output/air_sea_numbers.json).
 
 python scripts/make_tables.py
 """
@@ -169,17 +169,17 @@ Member & SST & \shortstack{Depth\\(hPa)} & \shortstack{$V_{10}$\\(m~s$^{-1}$)} &
         + r"""
 \hline
 \end{tabular}
-\tablenote{In CLIM, only two members have an associated surface cyclone, less than 2~hPa deep and without a warm core (not shown). Depth, largest depth $\Delta p$ of the cyclone; $V_{10}$, maximum 10 m wind (both Text S2.2). Over sea, hourly outputs with the center over the sea; Warm core and Tropical-like, those meeting the thermal criteria (Text S2.3) and the tropical-like criteria (Text S2.4). $^{a}$Eye-like feature.}
+\tablenote{In CLIM, only two of the six runs (one per configuration) have an associated surface cyclone, less than 2~hPa deep and without a warm core (not shown). Depth, largest depth $\Delta p$ of the cyclone; $V_{10}$, maximum 10 m wind (both Text S2.2). Over sea, hourly outputs with the center over the sea; Warm core and Tropical-like, those meeting the thermal criteria (Text S2.3) and the tropical-like criteria (Text S2.4). $^{a}$Eye-like feature.}
 \end{table}
 """
     )
 
 
-def text_s3():
-    """Changes of the maritime-flow latent heat flux and 0-1 km theta-e quoted in Sections 3.3 and 3.5 (Text S3),
+def air_sea():
+    """Changes of the latent heat flux and 0-1 km theta-e in the genesis region quoted in Sections 3.3 and 3.5,
     relative to the same member in CURR."""
     m = (
-        pd.read_csv(DATASET / 'diagnostics/maritime_flow.csv', parse_dates=['time'])
+        pd.read_csv(DATASET / 'diagnostics/air_sea_exchange.csv', parse_dates=['time'])
         .groupby('run')
         .mean(numeric_only=True)
     )
@@ -197,5 +197,5 @@ if __name__ == '__main__':
     for name, f in (('si_table_selection', table_s1), ('si_table_mcv', table_s2), ('si_table_cyclone', table_s3)):
         (OUT / f'{name}.tex').write_text(HEAD + f())
         print('written', OUT / f'{name}.tex')
-    (OUTPUT / 'text_s3_numbers.json').write_text(json.dumps(text_s3(), indent=1) + '\n')
-    print('written', OUTPUT / 'text_s3_numbers.json')
+    (OUTPUT / 'air_sea_numbers.json').write_text(json.dumps(air_sea(), indent=1) + '\n')
+    print('written', OUTPUT / 'air_sea_numbers.json')

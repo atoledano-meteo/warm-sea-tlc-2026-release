@@ -10,13 +10,13 @@ Code and model configuration for the paper by Toledano, Udina, Sola, Bech, Busqu
 | `namelists/wrf/<run>/`                | WRF-ARW 4.6.1 namelist of each run; `iofields_d0*.txt` are shared by all runs              |
 | `scripts/make_figures.py`             | Figures 2, 3, 4, S3 and S4, from the dataset and ERA5                                        |
 | `scripts/make_observation_figures.py` | Figures 1, S1 and S2, from the observations                                                  |
-| `scripts/make_tables.py`              | Tables S1 to S3, and the Text S3 numbers                                                     |
+| `scripts/make_tables.py`              | Tables S1 to S3, and the air–sea exchange changes                                            |
 | `scripts/download_era5.py`            | ERA5 fields of Figures 1d and 2c,d                                                           |
 | `scripts/make_sst.py`                 | CLIM and +2K SST from the current SST                                                        |
 | `scripts/warm_met_em.py`              | +2K-ALL initial and boundary conditions                                                      |
 | `scripts/simulate_satellite.py`       | Simulated 10.5 µm brightness temperature (RTTOV)                                            |
 | `scripts/diagnose_vortices.py`        | MCV and surface-cyclone diagnostics                                                          |
-| `scripts/maritime_flow.py`            | Latent heat flux and θe of the low-level maritime flow (Text S3)                            |
+| `scripts/air_sea_exchange.py`         | Latent heat flux and θe over the sea of the genesis region                                   |
 | `scripts/export_dataset.py`           | How the dataset was extracted from the full WRF output                                       |
 | `warmsea/`                            | Run names, readers and the vortex diagnostics                                                |
 
@@ -67,7 +67,7 @@ The full output (about 100 GB per run) is not archived. With it, the dataset is 
 
 ```bash
 python scripts/diagnose_vortices.py --runs RUNS --cache CACHE --out DIAGNOSTICS
-python scripts/maritime_flow.py --runs RUNS --out DIAGNOSTICS
+python scripts/air_sea_exchange.py --runs RUNS --out DIAGNOSTICS
 RTTOV_DIR=... python scripts/simulate_satellite.py --runs RUNS --out RTTOV
 python scripts/export_dataset.py --runs RUNS --rttov RTTOV --diagnostics DIAGNOSTICS ... --out DATASET
 ```

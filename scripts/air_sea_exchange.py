@@ -1,7 +1,7 @@
-"""Latent heat flux and 0-1 km theta-e of the low-level maritime flow (Text S3), from the full WRF output; writes
-the dataset's diagnostics/maritime_flow.csv.
+"""Latent heat flux and 0-1 km theta-e over the sea of the genesis region (Section 2.3), from the full WRF output;
+writes the dataset's diagnostics/air_sea_exchange.csv.
 
-    python scripts/maritime_flow.py --runs RUNS --out DIAGNOSTICS
+    python scripts/air_sea_exchange.py --runs RUNS --out DIAGNOSTICS
 """
 
 import argparse
@@ -15,11 +15,11 @@ from metpy.units import units
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from warmsea.runs import SST_RUNS
+from warmsea.vortex import GENESIS
 from warmsea.wrf import temperature
 
 RUNS = [r for r in SST_RUNS if not r.startswith('tmynn')]
 HOURS = pd.date_range('2026-10-03 12:00', '2026-10-04 06:00', freq='h')
-BOX = (40.5, 42.0, 1.5, 4.0)
 
 
 def theta_e(p, tk, r):
@@ -36,7 +36,7 @@ def run_series(run_dir):
             if t == HOURS[0]:
                 lat, lon = np.asarray(d['XLAT'][0]), np.asarray(d['XLONG'][0])
                 sea = (np.asarray(d['LANDMASK'][0]) <= 0.5) & (np.asarray(d['LAKEMASK'][0]) <= 0.5)
-                sea &= (lat >= BOX[0]) & (lat <= BOX[1]) & (lon >= BOX[2]) & (lon <= BOX[3])
+                sea &= (lat >= GENESIS[0]) & (lat <= GENESIS[1]) & (lon >= GENESIS[2]) & (lon <= GENESIS[3])
                 hgt = np.asarray(d['HGT'][0], 'f8')[sea]
             nf = 1 if t == HOURS[-1] else d.dimensions['Time'].size
             for k in range(nf):
@@ -61,5 +61,5 @@ if __name__ == '__main__':
     o.out.mkdir(parents=True, exist_ok=True)
     t = pd.concat([run_series(o.runs / r).assign(run=r) for r in RUNS])
     t[['run', 'time', 'latent_heat_W_m2', 'theta_e_0_1km_K']].to_csv(
-        o.out / 'maritime_flow.csv', index=False, float_format='%.4f'
+        o.out / 'air_sea_exchange.csv', index=False, float_format='%.4f'
     )
