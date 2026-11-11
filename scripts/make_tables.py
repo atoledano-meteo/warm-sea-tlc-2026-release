@@ -122,7 +122,7 @@ def table_s2():
     fmt = lambda r: [f'{mean_rain(r):.1f}', f'{a.loc[r, "mcv_peak_f"]:.1f}', num(z10[r], 1)]
     return (
         r"""\begin{table}[htbp]
-\caption{Rainfall and Mesoscale Convective Vortex in All Simulations}
+\caption{Rainfall and MCV in All Simulations}
 \label{tab:mcv}
 \centering\fontsize{8.5}{10.5}\selectfont\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{5pt}\vspace{3pt}
 \begin{tabular}{llccc}
@@ -169,7 +169,7 @@ Member & SST & \shortstack{Depth\\(hPa)} & \shortstack{$V_{10}$\\(m~s$^{-1}$)} &
         + r"""
 \hline
 \end{tabular}
-\tablenote{In CLIM, only two of the six runs (one per configuration) have an associated surface cyclone, less than 2~hPa deep and without a warm core (not shown). Depth, largest depth $\Delta p$ of the cyclone; $V_{10}$, maximum 10 m wind (both Text S2.2). Over sea, hourly outputs with the center over the sea; Warm core and Tropical-like, those meeting the thermal criteria (Text S2.3) and the tropical-like criteria (Text S2.4). $^{a}$Eye-like feature.}
+\tablenote{Depth, largest depth $\Delta p$ of the cyclone; $V_{10}$, maximum 10 m wind speed (both Text S2.2). Over sea, hourly outputs with the center over the sea; Warm core and Tropical-like, those meeting the thermal criteria (Text S2.3) and the tropical-like criteria (Text S2.4). $^{a}$Eye-like feature.}
 \end{table}
 """
     )
