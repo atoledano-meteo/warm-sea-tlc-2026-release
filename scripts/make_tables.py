@@ -70,7 +70,7 @@ def table_s1():
     rows.append(r'\multicolumn{2}{l}{Observed} & & 0 & 1 & 1 & ' + f'{d.obs_p99_mm.iloc[0]:.0f}' + r' & 0 & 1 & 0 \\')
     return (
         r"""\begin{table}[htbp]
-\caption{Rainfall Verification and Peak MCV Vorticity of the 12 Configurations and the Stochastic Members of the Selected One}
+\caption{Rainfall Verification and Peak MCV Vorticity}
 \label{tab:sel}
 \centering\fontsize{8.5}{10.5}\selectfont\renewcommand{\arraystretch}{1.25}\setlength{\tabcolsep}{4pt}\vspace{3pt}
 \begin{tabular}{llcccccccc}
@@ -83,7 +83,7 @@ Forcing & Physics & $\zeta_m$ ($f$) & Bias (mm) & FSS$_{50}$ & FSS$_{100}$ & P99
         + r"""
 \hline
 \end{tabular}
-\tablenote{48 h rainfall against the merged reference over the verification region. $\zeta_m$, peak MCV vorticity (Text S2.1); dash, no MCV. Bias, mean model minus reference. FSS$_{50}$ and FSS$_{100}$, fractions skill scores (Roberts \& Lean, 2008) for 50~mm at 51~km and 100~mm at 27~km. P99, 99th percentile of the 48 h rainfall over the verification region. Top 20, mean error at the 20 wettest of 301 gauges with complete 48 h totals. $r$, correlation of the regional-mean hourly gauge series; Lag, delay of the model 3-h rainfall peak. Bold: the selected configuration (CTRL of the SST experiments); SKB1 and SKB2: its stochastic members.}
+\tablenote{48 h rainfall against the merged reference over the verification region. $\zeta_m$, peak MCV vorticity (Text S2.1); dash, no MCV. Bias, mean model minus reference. FSS$_{50}$ and FSS$_{100}$, fractions skill scores (Roberts \& Lean, 2008) for 50~mm at 51~km and 100~mm at 27~km. P99, 99th percentile of the 48 h rainfall. Top 20, mean error at the 20 wettest of 301 gauges with complete 48 h totals. $r$, correlation of the regional-mean hourly gauge series; Lag, delay of the model 3-h rainfall peak. Bold: the selected configuration (CTRL of the SST experiments); SKB1 and SKB2: its stochastic members.}
 \end{table}
 """
     )
@@ -122,7 +122,7 @@ def table_s2():
     fmt = lambda r: [f'{mean_rain(r):.1f}', f'{a.loc[r, "mcv_peak_f"]:.1f}', num(z10[r], 1)]
     return (
         r"""\begin{table}[htbp]
-\caption{Rainfall and MCV in All Simulations}
+\caption{Rainfall and MCV Diagnostics}
 \label{tab:mcv}
 \centering\fontsize{8.5}{10.5}\selectfont\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{5pt}\vspace{3pt}
 \begin{tabular}{llccc}
@@ -152,24 +152,24 @@ def table_s3():
             f'{q.v10max_ms:.0f}',
             f'{q.marine_outputs:.0f}',
             f'{round(q.thermal_pct * q.marine_outputs / 100):.0f}',
-            f'{q.coherent:.0f}{note}',
+            f'{q.picornell_hours:.0f}{note}',
         ]
 
     return (
         r"""\begin{table}[htbp]
-\caption{Surface Cyclone Associated With the MCV, Over the Sea}
+\caption{Diagnostics of the Surface Cyclone Associated With the MCV, Over the Sea}
 \label{tab:cyclone}
 \centering\fontsize{8.5}{10.5}\selectfont\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{5pt}\vspace{3pt}
 \begin{tabular}{llccccc}
 \hline
-Member & SST & \shortstack{Depth\\(hPa)} & \shortstack{$V_{10}$\\(m~s$^{-1}$)} & \shortstack{Over sea\\(h)} & \shortstack{Warm core\\(h)} & \shortstack{Tropical-like\\(h)} \\
+Member & SST & \shortstack{Depth\\(hPa)} & \shortstack{$V_{10}$\\(m~s$^{-1}$)} & \shortstack{Over sea\\(h)} & \shortstack{Warm core\\(h)} & \shortstack{Medicane\\criteria (h)} \\
 \hline
 """
         + block_rows(fmt, 7, states=('curr', 'plus2k', 'plus2kall'))
         + r"""
 \hline
 \end{tabular}
-\tablenote{Depth, largest depth $\Delta p$ of the cyclone; $V_{10}$, maximum 10 m wind speed (both Text S2.2). Over sea, hourly outputs with the center over the sea; Warm core and Tropical-like, those meeting the thermal criteria (Text S2.3) and the tropical-like criteria (Text S2.4). $^{a}$Eye-like feature.}
+\tablenote{Depth, largest depth $\Delta p$ of the cyclone; $V_{10}$, maximum 10 m wind speed (both Text S2.2). Over sea, hourly outputs with the center over the sea; Warm core and Medicane criteria, hours meeting each set of criteria (Text S2.3). $^{a}$Eye-like feature.}
 \end{table}
 """
     )

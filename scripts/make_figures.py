@@ -611,7 +611,7 @@ def figS3():
         d = H[H.run == run].sort_values('time')
         if d.empty:
             continue
-        ok = d.structural_coherence.astype(bool).values
+        ok = d.picornell_medicane.astype(bool).values
         ax.plot(d.lon, d.lat, color=col, lw=0.7, transform=PC, zorder=3)
         ax.scatter(d.lon[ok], d.lat[ok], s=11, marker=mk, color=col, lw=0.4, transform=PC, zorder=4)
         ax.scatter(

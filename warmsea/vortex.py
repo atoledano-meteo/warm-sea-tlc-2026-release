@@ -8,7 +8,9 @@ from scipy.ndimage import gaussian_filter, map_coordinates, maximum_filter, mini
 from scipy.optimize import linear_sum_assignment
 from scipy.stats import linregress
 
-F = 9.6e-5  # Coriolis parameter at 41.3 N (s-1)
+# Coriolis parameter at 41.3 N, f = 2 * Omega * sin(41.3 deg) = 2 * 7.2921e-5 * 0.6600 = 9.63e-5 s-1, rounded as in
+# Text S2.1; vorticity is given in units of this fixed f.
+F = 9.6e-5
 GEO = Geod(a=6370000, b=6370000)  # WRF sphere
 GENESIS = (40.8, 41.9, 1.8, 3.4)  # lat0, lat1, lon0, lon1 (Section 2.1)
 TRACK_START, SEED_END, ASSOC_END = (
@@ -151,9 +153,12 @@ def track_mcv(
 
 
 # ------------------------------------------------------------------ surface cyclones (Picornell et al., 2014)
+# A minimum is a cyclone if the mean pressure gradient to 50 km is at least 0.5 hPa per 100 km in 6 of 8 directions, and an
+# intense cyclone (one of their medicane criteria) if it is at least 3.2 hPa per 100 km in 6 of 8 directions.
 SURFACE = dict(
     gradient_radius_km=50,
     minimum_gradient_hPa_km=0.005,
+    intense_gradient_hPa_km=0.032,
     minimum_sectors=6,
     maximum_displacement_km_hour=100,
     maximum_land_outputs=3,
@@ -162,7 +167,7 @@ SURFACE = dict(
 
 def pressure_minima(slp, lat, lon, hgt, land, mapfactor, dx, sigma=10.0):
     """Minima of the smoothed sea-level pressure (cells below 300 m) with a pressure rise of at least 0.005 hPa/km to
-    50 km in at least 6 of 8 directions."""
+    50 km in at least 6 of 8 directions; intense_sectors counts the directions with at least 0.032 hPa/km."""
     valid = hgt < 300
     smooth = gaussian_filter(np.where(valid, slp, 0), sigma / dx) / np.maximum(
         gaussian_filter(valid.astype(float), sigma / dx), 1e-12
@@ -196,6 +201,7 @@ def pressure_minima(slp, lat, lon, hgt, land, mapfactor, dx, sigma=10.0):
                     smoothed_slp=float(smooth[j, i]),
                     gradient=float(np.nanmean(slope[ok])),
                     sectors=count,
+                    intense_sectors=int(np.sum(ok & (slope >= c['intense_gradient_hPa_km']))),
                     land=bool(land[j, i]),
                 )
             )
@@ -302,59 +308,23 @@ def phase_space(zp, pl, lat, lon, center, heading, attrs, radius=100.0, layers=(
     return dict(mVTL=lower, mVTU=upper, B=b)
 
 
-def structure(d, g, center, translation=(0.0, 0.0)):
-    """Depth, 10 m wind, closure of the 10 m circulation, virtual-temperature anomaly and winds around a center."""
+def structure(d, g, center):
+    """Depth and maximum 10 m wind speed of the cyclone around a center (Text S2.2)."""
     lat, lon = g['lat'], g['lon']
-    az, _, rr = GEO.inv(np.full(lon.shape, center[1]), np.full(lat.shape, center[0]), lon, lat)
+    _, _, rr = GEO.inv(np.full(lon.shape, center[1]), np.full(lat.shape, center[0]), lon, lat)
     r = rr / 1000
-    east, north = np.sin(np.radians(az)), np.cos(np.radians(az))
     w = g['mapfactor'] ** -2
     sea = g['sea']
-    p = g['pressure_hPa']
-    z = g['height_m']
-    ca, sa = g['ca'], g['sa']
 
     def mean(a, m):
         ok = np.isfinite(a) & m
         return float(np.sum(a[ok] * w[ok]) / np.sum(w[ok])) if ok.any() else np.nan
 
     mx = lambda a, m: float(np.nanmax(a[m])) if np.isfinite(a[m]).any() else np.nan
-    u10 = d['u10'] * ca - d['v10'] * sa
-    v10 = d['v10'] * ca + d['u10'] * sa
-    vt = -u10 * north + v10 * east
-    ring = (r >= 30) & (r <= 80) & (g['hgt'] < 300)
-    theta = np.mod(np.degrees(np.arctan2(north, east)), 360)
-    sectors = np.array(
-        [
-            mean(vt, ring & (theta >= i * 45) & (theta < (i + 1) * 45))
-            if (ring & (theta >= i * 45) & (theta < (i + 1) * 45)).sum() >= 3
-            else np.nan
-            for i in range(8)
-        ]
-    )
-    out = dict(
+    return dict(
         slp_deficit=-mx(-d['slp'], (r < 60) & sea) - mean(d['slp'], (r >= 120) & (r <= 200) & sea),
-        v10max80=mx(np.hypot(u10, v10), (r <= 80) & sea),
-        v10max50=mx(np.hypot(u10, v10), (r <= 50) & sea),
-        closure_earth=bool(np.isfinite(sectors).all() and (sectors > 0).all()),
+        v10max80=mx(np.hypot(d['u10'], d['v10']), (r <= 80) & sea),
     )
-    anomaly = np.array([mean(t, (r <= 40) & sea) - mean(t, (r >= 100) & (r <= 150) & sea) for t in d['tvp']])
-    for name, lo, hi in (('lower', 600, 900), ('upper', 300, 600)):
-        sel = (p >= lo) & (p <= hi)
-        o = np.argsort(p[sel])
-        v = anomaly[sel][o]
-        out['tv_' + name] = float(np.trapezoid(v, p[sel][o]) / (hi - lo)) if np.isfinite(v).all() else np.nan
-    for lev in (850, 300):
-        i = list(p).index(lev)
-        out[f'speed{lev}'] = mean(np.hypot(d['up'][i], d['vp'][i]), (r <= 100) & sea)
-    ue = d['uz'] * ca - d['vz'] * sa
-    vn = d['vz'] * ca + d['uz'] * sa
-    tan = -ue * north + vn * east
-    prof = np.array([mean(v, (r >= 10) & (r <= 80) & sea) for v in tan])
-    out['z_vtmax_m'] = float(z[np.nanargmax(prof)]) if np.isfinite(prof).any() else np.nan
-    out['warm_anomaly_both'] = bool(out['tv_lower'] > 0 and out['tv_upper'] > 0)
-    out['cavicchia_winds'] = bool(out['v10max50'] > 18 and out['speed850'] > out['speed300'])
-    return out
 
 
 def persistence(times, passes, marine):

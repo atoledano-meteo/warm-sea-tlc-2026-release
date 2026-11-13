@@ -17,7 +17,6 @@ from netCDF4 import Dataset
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from warmsea.runs import SST_RUNS
 from warmsea import vortex as V
-from warmsea.wrf import virtual_temperature
 
 TIMES = pd.date_range('2026-10-03 18:00', '2026-10-05 00:00', freq='h')
 P_LEVELS = np.array([925, 900, 850, 800, 750, 700, 650, 600, 575, 550, 525, 500, 450, 400, 350, 300, 250, 200.0])
@@ -29,7 +28,7 @@ def wrfout(o, run, t):
 
 
 def extract(job):
-    """Heights, virtual temperature and winds on pressure and height levels, sea-level pressure and 10 m wind (wrf-python)."""
+    """Heights and winds on pressure and height levels, sea-level pressure and 10 m wind (wrf-python)."""
     import wrf
 
     o, run, t = job
@@ -42,14 +41,12 @@ def extract(job):
         z = wrf.destagger((g('PH') + g('PHB')) / 9.81, 0, meta=False)
         tk = wrf.tk(p, g('T') + 300, meta=False)
         q = np.maximum(g('QVAPOR'), 0)
-        tv = virtual_temperature(tk, q)
         u = wrf.destagger(g('U'), -1, meta=False)
         v = wrf.destagger(g('V'), -2, meta=False)
         ip = lambda a: arr(wrf.interplevel(a, np.log(p / 100), np.log(P_LEVELS), meta=False, missing=np.nan))
         iz = lambda a: arr(wrf.interplevel(a, z, Z_LEVELS, meta=False, missing=np.nan))
         f = dict(
             zp=ip(z),
-            tvp=ip(tv),
             up=ip(u),
             vp=ip(v),
             uz=iz(u),
@@ -115,11 +112,12 @@ def cyclones(job):
     for tid in ids:
         t_ = tr[tr.track_id == tid].sort_values('time').reset_index(drop=True)
         for k, r in t_.iterrows():
-            heading, u, v = V.motion(t_, k)
+            heading, _, _ = V.motion(t_, k)
             with np.load(o.cache / run / f'{r.time:%Y%m%d%H}.npz') as d:
-                s = V.structure(d, g, (r.lat, r.lon), (u, v))
+                s = V.structure(d, g, (r.lat, r.lon))
                 c = V.phase_space(d['zp'][cps], p[cps], g['lat'], g['lon'], (r.lat, r.lon), heading, attrs)
             thermal = bool(c['mVTL'] > 0 and c['mVTU'] > 0 and abs(c['B']) < 10)
+            intense = bool(r.intense_sectors >= V.SURFACE['minimum_sectors'])
             rows.append(
                 dict(
                     run=run,
@@ -132,9 +130,8 @@ def cyclones(job):
                     **c,
                     **s,
                     thermal=thermal,
-                    structural_coherence=bool(
-                        thermal and s['closure_earth'] and s['warm_anomaly_both'] and s['cavicchia_winds']
-                    ),
+                    intense=intense,
+                    picornell_medicane=thermal and intense,
                 )
             )
     return pd.DataFrame(rows)
@@ -165,9 +162,8 @@ def associate(m, h):
                 deficit_hPa=sea.slp_deficit.min(),
                 v10max_ms=sea.v10max80.max(),
                 thermal_pct=100 * sea.thermal.mean(),
-                closure_pct=100 * sea.closure_earth.mean(),
-                coherent=int(sea.structural_coherence.sum()),
-                coherent_longest_run=V.persistence(full.time, full.structural_coherence, ~full.land),
+                picornell_hours=int(sea.picornell_medicane.sum()),
+                picornell_longest_run=V.persistence(full.time, full.picornell_medicane, ~full.land),
             )
             links.append(sea)
         rows.append(row)

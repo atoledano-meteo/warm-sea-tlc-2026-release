@@ -40,6 +40,35 @@ FIG = OUTPUT / 'figures'
 FIG.mkdir(parents=True, exist_ok=True)
 T0 = pd.Timestamp('2026-10-04 00:00')
 GELIDA, OPOUL = (1.884890031, 41.40817998), (2.86499, 42.91839)
+
+# Rain gauge sites cited in Section 3.1 (XEMA station coordinates: Granollers YM, Vilassar de Mar DD, Barcelona-el Raval X4
+# for the city, Malgrat de Mar WT), with label offsets in degrees
+SITES = {
+    'G': (2.29847, 41.60929, -0.05, 0.05),
+    'V': (2.38674, 41.51175, 0.06, -0.04),
+    'B': (2.16774, 41.38386, -0.07, -0.05),
+    'M': (2.75659, 41.64706, 0.05, 0.05),
+}
+
+
+def sites(ax):
+    """Squares and letters for the sites cited in Section 3.1 (Figure 1b)."""
+    for k, (x, y, dx, dy) in SITES.items():
+        ax.plot(x, y, marker='s', ms=2.6, mfc='white', mec='k', mew=0.6, transform=PC, zorder=12)
+        ax.text(
+            x + dx,
+            y + dy,
+            k,
+            fontsize=6,
+            fontweight='bold',
+            ha='center',
+            va='center',
+            transform=PC,
+            zorder=13,
+            path_effects=[pe.withStroke(linewidth=1.8, foreground='white')],
+        )
+
+
 SITE = (41.3844, 2.1181)  # Barcelona sounding (Faculty of Physics)
 ZOOM = [1.0, 3.3, 40.75, 42.4]  # Figure 1c
 INK = '#1a1a19'
@@ -208,6 +237,7 @@ def fig1():
     g = g[g.data == 'hourly']
     ax.scatter(g.longitude, g.latitude, s=1.6, color='k', alpha=0.35, lw=0, transform=PC, zorder=9)
     ax.plot(*GELIDA, marker='^', ms=4, mfc='white', mec='k', mew=0.6, transform=PC, zorder=11)
+    sites(ax)
     boxline(ax, *ZOOM, color='k', lw=0.8, ls='--', zorder=12)
     latlon(ax, range(0, 4), range(41, 43))
     letter(ax, 'b')
