@@ -235,7 +235,7 @@ def fig1():
     ax.add_feature(cf.COASTLINE.with_scale('10m'), lw=0.6, color='#222', zorder=8)
     g = pd.read_csv(DATASET / 'rain_gauges.csv')
     g = g[g.data == 'hourly']
-    ax.scatter(g.longitude, g.latitude, s=1.6, color='k', alpha=0.35, lw=0, transform=PC, zorder=9)
+    ax.scatter(g.longitude, g.latitude, s=2.5, color='k', alpha=0.5, lw=0, transform=PC, zorder=9)
     ax.plot(*GELIDA, marker='^', ms=4, mfc='white', mec='k', mew=0.6, transform=PC, zorder=11)
     sites(ax)
     boxline(ax, *ZOOM, color='k', lw=0.8, ls='--', zorder=12)

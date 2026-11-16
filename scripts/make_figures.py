@@ -80,7 +80,7 @@ def fig2():
     )
     coast(ax, '50m', lw=0.4)
     outline(ax, *d01, color='k', lw=0.9, zorder=10)
-    outline(ax, *d02, color='k', lw=0.9, ls='--', zorder=10)
+    outline(ax, *d02, color='k', lw=0.9, zorder=10)
     ax.text(
         -13.5,
         46.6,
@@ -130,7 +130,7 @@ def fig2():
     )
     ax.add_feature(cf.LAND.with_scale('50m'), color='#ecebe6', zorder=2)
     coast(ax, '50m')
-    outline(ax, *d02, color='k', lw=0.8, ls='--', zorder=10)
+    outline(ax, *d02, color='k', lw=0.8, zorder=10)
     ax.text(
         -3.6,
         43.6,
@@ -140,7 +140,7 @@ def fig2():
         zorder=11,
         path_effects=[pe.withStroke(linewidth=1.6, foreground='white')],
     )
-    boxline(ax, *GENESIS, color='k', lw=0.9, zorder=12)
+    boxline(ax, *GENESIS, color='k', lw=1.1, ls=':', zorder=12)
     ax.text(
         2.4,
         40.3,
